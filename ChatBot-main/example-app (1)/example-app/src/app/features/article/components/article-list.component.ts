@@ -1,5 +1,5 @@
 import { Component, DestroyRef, inject, Input } from "@angular/core";
-import { ArticlesService } from "../services/articles.service";
+import { ArticlesService } from "../services/queryLLM.service";
 import { ArticleListConfig } from "../models/article-list-config.model";
 import { Article } from "../models/article.model";
 import { ArticlePreviewComponent } from "./article-preview.component";

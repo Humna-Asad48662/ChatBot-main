@@ -9,7 +9,7 @@ import {
 import { Router } from "@angular/router";
 import { EMPTY, switchMap } from "rxjs";
 import { NgClass } from "@angular/common";
-import { ArticlesService } from "../services/articles.service";
+import { ArticlesService } from "../services/queryLLM.service";
 import { Article } from "../models/article.model";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 

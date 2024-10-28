@@ -2,8 +2,6 @@ import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Article } from "../../models/article.model";
-import { ArticlesService } from "../../services/articles.service";
-import { CommentsService } from "../../services/comments.service";
 import { ArticleMetaComponent } from "../../components/article-meta.component";
 import { AsyncPipe, NgClass, NgForOf, NgIf } from "@angular/common";
 import { MarkdownPipe } from "../../../../shared/pipes/markdown.pipe";
@@ -52,8 +50,6 @@ export default class ArticleComponent implements OnInit {
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly articleService: ArticlesService,
-    private readonly commentsService: CommentsService,
     private readonly router: Router,
   ) {}
 
@@ -80,32 +76,4 @@ export default class ArticleComponent implements OnInit {
 
   }
 
-  addComment() {
-    this.isSubmitting = true;
-    this.commentFormErrors = null;
-
-    this.commentsService
-      .add(this.article.slug, this.commentControl.value)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (comment) => {
-          this.comments.unshift(comment);
-          this.commentControl.reset("");
-          this.isSubmitting = false;
-        },
-        error: (errors) => {
-          this.isSubmitting = false;
-          this.commentFormErrors = errors;
-        },
-      });
-  }
-
-  deleteComment(comment: Comment): void {
-    this.commentsService
-      .delete(comment.id, this.article.slug)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.comments = this.comments.filter((item) => item !== comment);
-      });
-  }
 }

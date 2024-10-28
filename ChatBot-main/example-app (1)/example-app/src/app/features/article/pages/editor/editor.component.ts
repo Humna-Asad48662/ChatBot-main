@@ -9,7 +9,7 @@ import {
 import { ActivatedRoute, Router } from "@angular/router";
 import { combineLatest } from "rxjs";
 import { Errors } from "../../../../core/models/errors.model";
-import { ArticlesService } from "../../services/articles.service";
+import { QueryLLMService } from "../../services/queryLLM.service";
 import { ListErrorsComponent } from "../../../../shared/components/list-errors.component";
 
 interface ArticleForm {
@@ -37,7 +37,7 @@ export default class EditorComponent implements OnInit {
   destroyRef = inject(DestroyRef);
 
   constructor(
-    private readonly articleService: ArticlesService,
+    private readonly articleService: QueryLLMService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
   ) { }

@@ -1,5 +1,5 @@
 export interface QueryHistory {
-  id: string;
+  id: number;
   query: string;
   answer: string;
   isActive: boolean;

@@ -1,27 +1,39 @@
 <div class="editor-page">
   <div class="container page">
     <div class="row">
-      <div class="col-md-10 offset-md-1 col-xs-12">
-        <app-list-errors [errors]="errors" />
+      <div class="col-md-3">
+        <!-- Sidebar for Chat History -->
+        <div class="chat-history">
+          <h3>Chat History</h3>
+          <ul>
+            <li *ngFor="let chat of chatHistory">
+              <strong>Query:</strong> {{ chat.query }}<br>
+              <strong>Response:</strong> {{ chat.response }}
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-9">
+        <div class="col-md-10 offset-md-1 col-xs-12">
+          <app-list-errors [errors]="errors"></app-list-errors>
 
-        <form [formGroup]="articleForm">
-          <fieldset [disabled]="isSubmitting">
-            <fieldset class="form-group">
-              <textarea class="form-control" formControlName="body" rows="8" placeholder="Write down your query.">
-              </textarea>
+          <form [formGroup]="articleForm">
+            <fieldset [disabled]="isSubmitting">
+              <fieldset class="form-group">
+                <textarea class="form-control" formControlName="body" rows="8" placeholder="Write down your query."></textarea>
+              </fieldset>
+              <fieldset class="form-group">
+                <button class="btn btn-lg pull-xs-right btn-primary" type="button" (click)="submitForm()">
+                  Query LLM
+                </button>
+              </fieldset>
+              <fieldset class="form-group">
+                <textarea class="form-control" id="response" name="response" #response formControlName="response" rows="8"
+                  placeholder="Response Will be displayed here."></textarea>
+              </fieldset>
             </fieldset>
-            <fieldset class="form-group">
-              <button class="btn btn-lg pull-xs-right btn-primary" type="button" rows="8" (click)="submitForm()">
-                Query LLM
-              </button>
-            </fieldset>
-            <fieldset class="form-group">
-              <textarea class="form-control" id="response" name="response" #response formControlName="response" rows="8"
-                placeholder="Response Will be displayed here.">
-              </textarea>
-            </fieldset>
-          </fieldset>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   </div>

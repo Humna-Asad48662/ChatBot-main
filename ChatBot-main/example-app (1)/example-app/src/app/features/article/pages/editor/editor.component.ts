@@ -1,25 +1,27 @@
 import { NgForOf } from "@angular/common";
-import { Component, DestroyRef, ElementRef, inject, OnInit, ViewChild } from "@angular/core";
-import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  UntypedFormGroup,
-} from "@angular/forms";
+import { Component, ElementRef, inject, OnInit, ViewChild } from "@angular/core";
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, UntypedFormGroup } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { combineLatest } from "rxjs";
 import { Errors } from "../../../../core/models/errors.model";
 import { QueryLLMService } from "../../services/queryLLM.service";
 import { ListErrorsComponent } from "../../../../shared/components/list-errors.component";
+import { QueryHistoryService } from "../../services/queryHistory.service";
+import { QueryHistory } from "../../models/queryHistory.model";
 
 interface ArticleForm {
   body: FormControl<string>;
   response: FormControl<string>;
 }
 
+interface ChatHistoryItem {
+  query: string;
+  response: string;
+}
+
 @Component({
   selector: "app-editor-page",
   templateUrl: "./editor.component.html",
+  styleUrls: ['./editor.component.css'],
   imports: [ListErrorsComponent, ReactiveFormsModule, NgForOf],
   standalone: true,
 })
@@ -32,39 +34,90 @@ export default class EditorComponent implements OnInit {
     response: new FormControl("", { nonNullable: true }),
   });
 
-  errors: Errors | null = null;
+  //articleForm: FormGroup;
+
   isSubmitting = false;
-  destroyRef = inject(DestroyRef);
+  errors: any = {};
+  queryies: QueryHistory[] = [];
+  queryHistory: QueryHistory = {
+    id: 0,
+    query: "",
+    answer: "",
+    createdDate: new Date(),
+    isActive: true
+
+  };
+  chatHistory: ChatHistoryItem[] = []; // Use the interface here
+
+
+  // @ViewChild('response') bodyTextarea!: ElementRef;
 
   constructor(
+    private fb: FormBuilder,
     private readonly articleService: QueryLLMService,
+    private readonly queryHistoryService: QueryHistoryService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-  ) { }
+  ) {
+    this.articleForm = this.fb.group({
+      body: '',
+      response: ''
+    });
 
-  ngOnInit() {
+    this.queryHistoryService.getAll().subscribe((data) => {
+      this.queryies = data;
+    });
+
+
 
   }
 
+  ngOnInit(): void { }
+
   submitForm(): void {
     this.isSubmitting = true;
-    this.response = '';
+    const query = this.articleForm.get('body')?.value;
 
-    // post the changes
+    var response = '';
     this.articleService
       .query(this.articleForm.value.body)
       .subscribe(
         (response) => {
           if (response['choices'][0]?.message?.content != undefined) {
-            this.response = response['choices'][0].message.content;
+            this.articleForm.value.response = response['choices'][0].message.content;
             this.articleForm.patchValue({
-              response: this.response
-            });
-            this.focusTextarea();
+              response: this.articleForm.value.response
+            }); this.focusTextarea();
+
+            // Add to chat history
+            this.chatHistory.push({ query, response: response['choices'][0].message.content });
+            
+            this.queryHistory.query = this.articleForm.value.body;
+            this.queryHistory.answer = this.articleForm.value.response;
+            this.queryHistoryService.add(this.queryHistory);
+
+
           }
           this.isSubmitting = false;
         },
       );
+
+
+
+    // Simulate sending query to LLM and getting a response
+    //const response = 'Simulated response from LLM';
+
+    // Update the form with the response
+    // this.articleForm.get('response')?.setValue(response);
+
+    // // Add to chat history
+    // this.chatHistory.push({ query, response });
+
+    // this.queryHistory.query = this.articleForm.value.body;
+    //         this.queryHistory.answer = this.response;
+    //         this.queryHisotryService.add(this.queryHistory);
+
+    // this.isSubmitting = false;
   }
   focusTextarea(): void {
     const textarea: HTMLTextAreaElement = this.bodyTextarea.nativeElement;
@@ -73,4 +126,5 @@ export default class EditorComponent implements OnInit {
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
   }
+
 }

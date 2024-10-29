@@ -7,6 +7,7 @@ import { QueryLLMService } from "../../services/queryLLM.service";
 import { ListErrorsComponent } from "../../../../shared/components/list-errors.component";
 import { QueryHistoryService } from "../../services/queryHistory.service";
 import { QueryHistory } from "../../models/queryHistory.model";
+import { ChangeDetectorRef } from '@angular/core';
 
 interface ArticleForm {
   body: FormControl<string>;
@@ -58,6 +59,7 @@ export default class EditorComponent implements OnInit {
     private readonly queryHistoryService: QueryHistoryService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private cdr: ChangeDetectorRef 
   ) {
     this.articleForm = this.fb.group({
       body: '',
@@ -93,12 +95,16 @@ export default class EditorComponent implements OnInit {
             }); this.focusTextarea();
 
             // Add to chat history
-            //this.chatHistory.push({ query, response: response['choices'][0].message.content });
+           // this.chatHistory.push({ query, response: response['choices'][0].message.content });
+
+           // this.articleForm.get('response')?.setValue(response['choices'][0].message.content);
 
             this.queryHistory.query = this.articleForm.value.body;
             this.queryHistory.answer = this.articleForm.value.response;
             this.queryHistoryService.add(this.queryHistory).subscribe((data) => {
               console.log(data);
+              this.loadDataHistory();
+              //this.cdr.detectChanges();
             });
 
 
@@ -108,7 +114,7 @@ export default class EditorComponent implements OnInit {
       );
 
       
-    this.loadDataHistory();
+    //this.loadDataHistory();
 
 
     // Simulate sending query to LLM and getting a response

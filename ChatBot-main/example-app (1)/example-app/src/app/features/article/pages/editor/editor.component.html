@@ -6,9 +6,9 @@
         <div class="chat-history">
           <h3>Chat History</h3>
           <ul>
-            <li *ngFor="let chat of chatHistory">
+            <li *ngFor="let chat of queries">
               <strong>Query:</strong> {{ chat.query }}<br>
-              <strong>Response:</strong> {{ chat.response }}
+              <strong>Response:</strong> {{ chat.answer }}
             </li>
           </ul>
         </div>

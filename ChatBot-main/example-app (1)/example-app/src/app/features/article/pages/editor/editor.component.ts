@@ -38,7 +38,7 @@ export default class EditorComponent implements OnInit {
 
   isSubmitting = false;
   errors: any = {};
-  queryies: QueryHistory[] = [];
+  queries: QueryHistory[] = [];
   queryHistory: QueryHistory = {
     id: 0,
     query: "",
@@ -63,16 +63,19 @@ export default class EditorComponent implements OnInit {
       body: '',
       response: ''
     });
+    this.loadDataHistory();
+  }
 
-    this.queryHistoryService.getAll().subscribe((data) => {
-      this.queryies = data;
-    });
-
-
+  ngOnInit(): void {
 
   }
 
-  ngOnInit(): void { }
+  loadDataHistory(): void {
+
+    this.queryHistoryService.getAll().subscribe((data) => {
+      this.queries = data;
+    });
+  }
 
   submitForm(): void {
     this.isSubmitting = true;
@@ -90,11 +93,13 @@ export default class EditorComponent implements OnInit {
             }); this.focusTextarea();
 
             // Add to chat history
-            this.chatHistory.push({ query, response: response['choices'][0].message.content });
-            
+            //this.chatHistory.push({ query, response: response['choices'][0].message.content });
+
             this.queryHistory.query = this.articleForm.value.body;
             this.queryHistory.answer = this.articleForm.value.response;
-            this.queryHistoryService.add(this.queryHistory);
+            this.queryHistoryService.add(this.queryHistory).subscribe((data) => {
+              console.log(data);
+            });
 
 
           }
@@ -102,6 +107,8 @@ export default class EditorComponent implements OnInit {
         },
       );
 
+      
+    this.loadDataHistory();
 
 
     // Simulate sending query to LLM and getting a response

@@ -32,17 +32,14 @@ export class QueryHistoryService {
 
   add(queryHistory: QueryHistory): Observable<boolean> {
     return this.http
-      .post<boolean>(`api/QueryHistory`, {
-        queryHistory,
-      })
+      .post<boolean>(this.webUrl + `api/QueryHistory`, queryHistory)
       .pipe(map((data) => data));
   }
 
   update(queryHistory: QueryHistory): Observable<boolean> {
     return this.http
-      .put<boolean>(`api/QueryHistory`, {
-        queryHistory,
-      })
+      .put<boolean>(this.webUrl + `api/QueryHistory`,queryHistory,
+      )
       .pipe(map((data) => data));
   }
 

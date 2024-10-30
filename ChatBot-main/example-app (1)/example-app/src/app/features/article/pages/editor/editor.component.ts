@@ -7,17 +7,7 @@ import { QueryLLMService } from "../../services/queryLLM.service";
 import { ListErrorsComponent } from "../../../../shared/components/list-errors.component";
 import { QueryHistoryService } from "../../services/queryHistory.service";
 import { QueryHistory } from "../../models/queryHistory.model";
-import { ChangeDetectorRef } from '@angular/core';
-
-interface ArticleForm {
-  body: FormControl<string>;
-  response: FormControl<string>;
-}
-
-interface ChatHistoryItem {
-  query: string;
-  response: string;
-}
+import { identity, timeInterval } from "rxjs";
 
 @Component({
   selector: "app-editor-page",
@@ -27,55 +17,36 @@ interface ChatHistoryItem {
   standalone: true,
 })
 export default class EditorComponent implements OnInit {
-  tagList: string[] = [];
-  response: string = "";
-  @ViewChild('response') bodyTextarea!: ElementRef;
-  articleForm: UntypedFormGroup = new FormGroup<ArticleForm>({
-    body: new FormControl("", { nonNullable: true }),
-    response: new FormControl("", { nonNullable: true }),
-  });
-
-  //articleForm: FormGroup;
-
-  isSubmitting = false;
+  articleForm: FormGroup;
   errors: any = {};
-  queries: QueryHistory[] = [];
-  queryHistory: QueryHistory = {
-    id: 0,
-    query: "",
-    answer: "",
-    createdDate: new Date(),
-    isActive: true
-
-  };
-  chatHistory: ChatHistoryItem[] = []; // Use the interface here
-
-
-  // @ViewChild('response') bodyTextarea!: ElementRef;
+  isSubmitting = false;
+  chatHistory: QueryHistory[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private readonly articleService: QueryLLMService,
-    private readonly queryHistoryService: QueryHistoryService,
-    private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private cdr: ChangeDetectorRef 
+    private queryLLMService: QueryLLMService,
+    private queryHistoryService: QueryHistoryService
   ) {
     this.articleForm = this.fb.group({
       body: '',
       response: ''
     });
-    this.loadDataHistory();
   }
 
   ngOnInit(): void {
-
+    this.loadChatHistory();
   }
 
-  loadDataHistory(): void {
+  deleteChatHistory(id: number): void {
+    this.queryHistoryService.delete(id).subscribe(() => {
+      this.loadChatHistory();
+    });
+  }
 
-    this.queryHistoryService.getAll().subscribe((data) => {
-      this.queries = data;
+  loadChatHistory(): void {
+    this.queryHistoryService.getAll().subscribe((history) => {
+      this.chatHistory = history;
     });
   }
 
@@ -83,61 +54,37 @@ export default class EditorComponent implements OnInit {
     this.isSubmitting = true;
     const query = this.articleForm.get('body')?.value;
 
-    var response = '';
-    this.articleService
-      .query(this.articleForm.value.body)
-      .subscribe(
-        (response) => {
-          if (response['choices'][0]?.message?.content != undefined) {
-            this.articleForm.value.response = response['choices'][0].message.content;
-            this.articleForm.patchValue({
-              response: this.articleForm.value.response
-            }); this.focusTextarea();
-
-            // Add to chat history
-           // this.chatHistory.push({ query, response: response['choices'][0].message.content });
-
-           // this.articleForm.get('response')?.setValue(response['choices'][0].message.content);
-
-            this.queryHistory.query = this.articleForm.value.body;
-            this.queryHistory.answer = this.articleForm.value.response;
-            this.queryHistoryService.add(this.queryHistory).subscribe((data) => {
-              console.log(data);
-              this.loadDataHistory();
-              //this.cdr.detectChanges();
-            });
-
-
-          }
-          this.isSubmitting = false;
-        },
-      );
-
-      
-    //this.loadDataHistory();
-
-
-    // Simulate sending query to LLM and getting a response
-    //const response = 'Simulated response from LLM';
-
-    // Update the form with the response
-    // this.articleForm.get('response')?.setValue(response);
-
-    // // Add to chat history
-    // this.chatHistory.push({ query, response });
-
-    // this.queryHistory.query = this.articleForm.value.body;
-    //         this.queryHistory.answer = this.response;
-    //         this.queryHisotryService.add(this.queryHistory);
-
-    // this.isSubmitting = false;
-  }
-  focusTextarea(): void {
-    const textarea: HTMLTextAreaElement = this.bodyTextarea.nativeElement;
-    textarea.focus();
-    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-    textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    this.queryLLMService.query(query).subscribe(
+      (response) => {
+        this.articleForm.patchValue({ response: response.choices[0].message.content });
+        this.saveQueryHistory(query, response.choices[0].message.content);
+        this.isSubmitting = false;
+      },
+      (err) => {
+        this.errors = err;
+        this.isSubmitting = false;
+      }
+    );
   }
 
+ // #write a function to clear query and response text areas after getting rrsponse from llm and populating chat history
+  clearTextAreas(): void {
+    this.articleForm.patchValue({ body: '' });
+    this.articleForm.patchValue({ response: '' });
+  }
+
+  saveQueryHistory(query: string, answer: string): void {
+    const newHistory: QueryHistory = {
+      id: 0, // Assuming the backend will generate the ID
+      query: query,
+      answer: answer,
+      isActive: true,
+      createdDate: new Date()
+    };
+
+    this.queryHistoryService.add(newHistory).subscribe(() => {
+      this.loadChatHistory();
+    });
+  }
 }
+

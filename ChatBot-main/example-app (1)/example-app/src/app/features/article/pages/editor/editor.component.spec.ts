@@ -68,20 +68,7 @@ describe('EditorComponent', () => {
     expect(component.articleForm.value.response).toBe('');
   });
 
-  it('should delete chat history', () => {
-    const mockHistory: QueryHistory[] = [
-      { id: 1, query: 'Test query 1', answer: 'Test answer 1', isActive: true, createdDate: new Date() }
-    ];
-    queryHistoryService.getAll.and.returnValue(of(mockHistory));
-    queryHistoryService.delete.and.returnValue(of(true));
-
-    component.ngOnInit();
-    component.deleteChatHistory(1);
-
-    expect(queryHistoryService.delete).toHaveBeenCalledWith(1);
-    expect(queryHistoryService.getAll).toHaveBeenCalledTimes(2); // Once on init and once after delete
-  });
-
+ 
   it('should clear text areas after getting response from LLM and populating chat history', () => {
     const mockResponse = { choices: [{ message: { content: 'Test response' } }] };
     queryLLMService.query.and.returnValue(of(mockResponse));

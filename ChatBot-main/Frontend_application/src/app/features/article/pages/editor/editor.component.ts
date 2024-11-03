@@ -9,6 +9,16 @@ import { QueryHistoryService } from "../../services/queryHistory.service";
 import { QueryHistory } from "../../models/queryHistory.model";
 import { identity, timeInterval } from "rxjs";
 
+interface ArticleForm {
+  body: FormControl<string>;
+  response: FormControl<string>;
+}
+
+interface ChatHistoryItem {
+  query: string;
+  response: string;
+}
+
 @Component({
   selector: "app-editor-page",
   templateUrl: "./editor.component.html",
@@ -20,14 +30,28 @@ export default class EditorComponent implements OnInit {
   tagList: string[] = [];
   response: string = "";
   @ViewChild('response') bodyTextarea!: ElementRef;
-  articleForm: UntypedFormGroup = new FormGroup({
-    body: new FormControl(""),
-    response: new FormControl(""),
+  articleForm: UntypedFormGroup = new FormGroup<ArticleForm>({
+    body: new FormControl("", { nonNullable: true }),
+    response: new FormControl("", { nonNullable: true }),
   });
-  
+
+  //articleForm: FormGroup;
+
   isSubmitting = false;
   errors: any = {};
-  queryHistory: QueryHistory[] = [];
+  queries: QueryHistory[] = [];
+  queryHistory: QueryHistory = {
+    id: 0,
+    query: "",
+    answer: "",
+    createdDate: new Date(),
+    isActive: true
+
+  };
+  chatHistory: ChatHistoryItem[] = []; // Use the interface here
+
+
+  // @ViewChild('response') bodyTextarea!: ElementRef;
 
   constructor(
     private fb: FormBuilder,
@@ -35,43 +59,81 @@ export default class EditorComponent implements OnInit {
     private readonly queryHistoryService: QueryHistoryService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-  ) {}
+  ) 
+  {
+    this.articleForm = this.fb.group({
+      body: '',
+      response: ''
+    });
+    this.loadDataHistory();
+  }
 
   ngOnInit(): void {
-    this.loadQueryHistory();
+
+  }
+
+  loadDataHistory(): void {
+
+    this.queryHistoryService.getAll().subscribe((data) => {
+      this.queries = data;
+    });
   }
 
   submitForm(): void {
     this.isSubmitting = true;
     const query = this.articleForm.get('body')?.value;
 
-    this.articleService.query(query).subscribe((response) => {
-      if (response['choices'][0]?.message?.content != undefined) {
-        const responseText = response['choices'][0].message.content;
-        this.articleForm.patchValue({ response: responseText });
-        this.focusTextarea();
+    var response = '';
+    this.articleService
+      .query(this.articleForm.value.body)
+      .subscribe(
+        (response) => {
+          if (response['choices'][0]?.message?.content != undefined) {
+            this.articleForm.value.response = response['choices'][0].message.content;
+            this.articleForm.patchValue({
+              response: this.articleForm.value.response
+            }); this.focusTextarea();
 
-        // Save query and response to history
-        const queryHistory: QueryHistory = {
-          id: 0, // Assuming the backend will generate the ID
-          query: query,
-          answer: responseText,
-          isActive: true,
-          createdDate: new Date()
-        };
-        this.queryHistoryService.add(queryHistory).subscribe(() => {
-          this.loadQueryHistory();
-        });
-      }
-      this.isSubmitting = false;
+            // Add to chat history
+           // this.chatHistory.push({ query, response: response['choices'][0].message.content });
+
+           // this.articleForm.get('response')?.setValue(response['choices'][0].message.content);
+
+            this.queryHistory.query = this.articleForm.value.body;
+            this.queryHistory.answer = this.articleForm.value.response;
+            this.queryHistoryService.add(this.queryHistory).subscribe((data) => {
+              console.log(data);
+              this.loadDataHistory();
+              
+            });
+
+
+          }
+          this.isSubmitting = false;
+        },
+      );
+
+  }
+  loadChat(id: number): void {
+    this.queryHistoryService.getById(id).subscribe((chat) => {
+      this.articleForm.patchValue({
+        body: chat.query,
+        response: chat.answer,
+      });
     });
   }
 
-  loadQueryHistory(): void {
-    this.queryHistoryService.getAll().subscribe((history) => {
-      this.queryHistory = history;
-    });
-  }
+
+deleteChat(id: number): void {
+  this.queryHistoryService.delete(id).subscribe(() => {
+    this.queries = this.queries.filter((chat) => chat.id !== id);
+  });
+
+}
+
+
+  
+
 
   focusTextarea(): void {
     const textarea: HTMLTextAreaElement = this.bodyTextarea.nativeElement;
@@ -80,5 +142,11 @@ export default class EditorComponent implements OnInit {
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
   }
-}
+  refreshForm(): void {
+    this.articleForm.patchValue({
+      body: '',
+      response: '',
+    });
+  }
 
+}

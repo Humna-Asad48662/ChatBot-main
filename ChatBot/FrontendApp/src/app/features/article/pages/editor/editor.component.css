@@ -1,0 +1,17 @@
+.btn-primary {
+background-color: #6894d5; /* Change this to your desired color */
+border-color: #6894d5; /* Change this to your desired color */
+   /* Change this to your desired color */
+}
+
+.chat-history {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.chat-query, .chat-response {
+  margin-bottom: 10px;
+}

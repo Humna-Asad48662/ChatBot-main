@@ -9,8 +9,6 @@ import { QueryHistoryService } from "../../services/queryHistory.service";
 import { QueryHistory } from "../../models/queryHistory.model";
 import { identity, timeInterval } from "rxjs";
 
-
-
 @Component({
   selector: "app-editor-page",
   templateUrl: "./editor.component.html",
@@ -26,7 +24,6 @@ export default class EditorComponent implements OnInit {
     body: new FormControl(""),
     response: new FormControl(""),
   });
-  
 
   isSubmitting = false;
   errors: any = {};
@@ -43,11 +40,7 @@ export default class EditorComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    
-  }
-
-  
+  ngOnInit(): void {}
 
   submitForm(): void {
     this.isSubmitting = true;
@@ -58,10 +51,14 @@ export default class EditorComponent implements OnInit {
         const responseText = response['choices'][0].message.content;
         this.articleForm.patchValue({ response: responseText });
         this.focusTextarea();
-
       }
       this.isSubmitting = false;
     });
+  }
+
+  deleteChat(): void {
+    this.articleForm.reset();
+    this.response = "";
   }
 
   focusTextarea(): void {
@@ -71,8 +68,5 @@ export default class EditorComponent implements OnInit {
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
   }
-
-  
-  
 }
 

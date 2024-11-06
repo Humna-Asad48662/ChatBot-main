@@ -68,5 +68,12 @@ export default class EditorComponent implements OnInit {
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
   }
+
+  clearTextAreas(): void {
+    this.articleForm.reset();
+    this.response = "";
+  }
+
+  
 }
 

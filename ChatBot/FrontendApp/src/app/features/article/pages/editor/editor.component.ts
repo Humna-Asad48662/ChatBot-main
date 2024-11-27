@@ -9,6 +9,11 @@ import { QueryHistoryService } from "../../services/queryHistory.service";
 import { QueryHistory } from "../../models/queryHistory.model";
 import { identity, timeInterval } from "rxjs";
 
+interface ChatEntry {
+  query: string;
+  response: string;
+}
+
 @Component({
   selector: "app-editor-page",
   templateUrl: "./editor.component.html",
@@ -17,14 +22,11 @@ import { identity, timeInterval } from "rxjs";
   standalone: true,
 })
 export default class EditorComponent implements OnInit {
-  tagList: string[] = [];
-  response: string = "";
-  @ViewChild('response') bodyTextarea!: ElementRef;
+  @ViewChild('chatHistory') chatHistory!: ElementRef;
   articleForm: UntypedFormGroup = new FormGroup({
     body: new FormControl(""),
-    response: new FormControl(""),
   });
-
+  chatEntries: ChatEntry[] = [];
   isSubmitting = false;
   errors: any = {};
 
@@ -33,12 +35,7 @@ export default class EditorComponent implements OnInit {
     private readonly articleService: QueryLLMService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-  ) {
-    this.articleForm = this.fb.group({
-      body: '',
-      response: ''
-    });
-  }
+  ) {}
 
   ngOnInit(): void {}
 
@@ -49,31 +46,26 @@ export default class EditorComponent implements OnInit {
     this.articleService.query(query).subscribe((response) => {
       if (response['choices'][0]?.message?.content != undefined) {
         const responseText = response['choices'][0].message.content;
-        this.articleForm.patchValue({ response: responseText });
-        this.focusTextarea();
+        this.chatEntries.push({ query, response: responseText });
+        this.articleForm.reset();
+        this.scrollToBottom();
       }
       this.isSubmitting = false;
     });
   }
-
-  deleteChat(): void {
-    this.articleForm.reset();
-    this.response = "";
+ deleteChatHistory(): void {
+    this.chatEntries = [];
   }
 
-  focusTextarea(): void {
-    const textarea: HTMLTextAreaElement = this.bodyTextarea.nativeElement;
-    textarea.focus();
-    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-    textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
+  //write the function to refresh the page
+  refreshPage(): void {
+    window.location.reload();
   }
 
-  clearTextAreas(): void {
-    this.articleForm.reset();
-    this.response = "";
+  scrollToBottom(): void {
+    setTimeout(() => {
+      this.chatHistory.nativeElement.scrollTop = this.chatHistory.nativeElement.scrollHeight;
+    }, 0);
   }
-
-  
 }
 

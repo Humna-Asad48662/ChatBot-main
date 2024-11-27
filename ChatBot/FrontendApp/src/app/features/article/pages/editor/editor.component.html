@@ -1,19 +1,26 @@
 <div class="editor-page">
   <div class="container page">
     <div class="row">
-      <div class="col-md-3">
-       
-      </div>
+      <div class="col-md-3"></div>
       <div class="col-md-9">
         <div class="col-md-10 offset-md-1 col-xs-12">
           <app-list-errors [errors]="errors"></app-list-errors>
+          <div class="chat-history-container">
+            <div class="chat-history" #chatHistory>
+              <div *ngFor="let entry of chatEntries" class="chat-entry">
+                <div class="chat-query"><strong>Query:</strong> {{ entry.query }}</div>
+                <div class="chat-response"><strong>Response:</strong> {{ entry.response }}</div>
+              </div>
+            </div>
+            <button class="btn btn-danger delete-chat-btn" (click)="deleteChatHistory()">Delete Chat</button>
+          </div>
           <form [formGroup]="articleForm">
             <fieldset [disabled]="isSubmitting">
               <fieldset class="form-group">
                 <textarea
                   class="form-control"
                   formControlName="body"
-                  rows="8"
+                  rows="3"
                   placeholder="Write down your query."
                 ></textarea>
               </fieldset>
@@ -25,17 +32,6 @@
                 >
                   Query LLM
                 </button>
-              </fieldset>
-              <fieldset class="form-group">
-                <textarea
-                  class="form-control"
-                  id="response"
-                  name="response"
-                  #response
-                  formControlName="response"
-                  rows="8"
-                  placeholder="Response Will be displayed here."
-                ></textarea>
               </fieldset>
             </fieldset>
           </form>

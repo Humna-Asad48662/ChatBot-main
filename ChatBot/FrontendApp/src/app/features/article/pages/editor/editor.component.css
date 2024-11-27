@@ -1,7 +1,10 @@
 .btn-primary {
-background-color: #6894d5; /* Change this to your desired color */
-border-color: #6894d5; /* Change this to your desired color */
-   /* Change this to your desired color */
+  background-color: #6894d5; /* Change this to your desired color */
+  border-color: #6894d5; /* Change this to your desired color */
+}
+
+.chat-history-container {
+  position: relative;
 }
 
 .chat-history {
@@ -12,6 +15,16 @@ border-color: #6894d5; /* Change this to your desired color */
   margin-bottom: 20px;
 }
 
-.chat-query, .chat-response {
+.chat-entry {
   margin-bottom: 10px;
+}
+
+.chat-query, .chat-response {
+  margin-bottom: 5px;
+}
+
+.delete-chat-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }

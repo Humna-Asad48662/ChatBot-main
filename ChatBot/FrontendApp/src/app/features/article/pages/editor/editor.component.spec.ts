@@ -1,11 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
-import { RouterTestingModule } from '@angular/router/testing';
 import EditorComponent from './editor.component';
 import { QueryLLMService } from '../../services/queryLLM.service';
-import { FormBuilder } from '@angular/forms';
 
 describe('EditorComponent', () => {
   let component: EditorComponent;
@@ -16,12 +13,9 @@ describe('EditorComponent', () => {
     const queryLLMServiceSpy = jasmine.createSpyObj('QueryLLMService', ['query']);
 
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, RouterTestingModule, EditorComponent],
-      providers: [
-        { provide: QueryLLMService, useValue: queryLLMServiceSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { params: {} } } },
-        FormBuilder
-      ]
+      declarations: [EditorComponent],
+      imports: [ReactiveFormsModule],
+      providers: [{ provide: QueryLLMService, useValue: queryLLMServiceSpy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EditorComponent);
@@ -30,45 +24,52 @@ describe('EditorComponent', () => {
     fixture.detectChanges();
   });
 
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
   it('should set isSubmitting to true when submitForm is called', () => {
-    queryLLMService.query.and.returnValue(of({ choices: [{ message: { content: 'response text' } }] }));
     component.submitForm();
     expect(component.isSubmitting).toBeTrue();
   });
 
   it('should call articleService.query with the correct query', () => {
-    queryLLMService.query.and.returnValue(of({ choices: [{ message: { content: 'response text' } }] }));
-    component.articleForm.patchValue({ body: 'test query' });
-    component.submitForm();
-    expect(queryLLMService.query).toHaveBeenCalledWith('test query');
-  });
+    const query = 'Test query';
+    component.articleForm.setValue({ body: query });
+    queryLLMService.query.and.returnValue(of({ choices: [{ message: { content: 'Test response' } }] }));
 
-  it('should update the form with the response text', () => {
-    const mockResponse = { choices: [{ message: { content: 'response text' } }] };
-    queryLLMService.query.and.returnValue(of(mockResponse));
-
-    component.articleForm.patchValue({ body: 'test query' });
     component.submitForm();
 
-    expect(component.articleForm.get('response')?.value).toBe('response text');
+    expect(queryLLMService.query).toHaveBeenCalledWith(query);
   });
 
-  it('should call focusTextarea', () => {
-    spyOn(component, 'focusTextarea');
-    const mockResponse = { choices: [{ message: { content: 'response text' } }] };
-    queryLLMService.query.and.returnValue(of(mockResponse));
+  it('should add a new chat entry when a response is received', () => {
+    const query = 'Test query';
+    const responseText = 'Test response';
+    component.articleForm.setValue({ body: query });
+    queryLLMService.query.and.returnValue(of({ choices: [{ message: { content: responseText } }] }));
 
-    component.articleForm.patchValue({ body: 'test query' });
     component.submitForm();
 
-    expect(component.focusTextarea).toHaveBeenCalled();
+    expect(component.chatEntries.length).toBe(1);
+    expect(component.chatEntries[0]).toEqual({ query, response: responseText });
   });
 
-  it('should set isSubmitting to false after the response is received', () => {
-    const mockResponse = { choices: [{ message: { content: 'response text' } }] };
-    queryLLMService.query.and.returnValue(of(mockResponse));
+  it('should reset the form after a response is received', () => {
+    const query = 'Test query';
+    component.articleForm.setValue({ body: query });
+    queryLLMService.query.and.returnValue(of({ choices: [{ message: { content: 'Test response' } }] }));
 
-    component.articleForm.patchValue({ body: 'test query' });
+    component.submitForm();
+
+    expect(component.articleForm.get('body')?.value).toBe('');
+  });
+
+  it('should set isSubmitting to false after a response is received', () => {
+    const query = 'Test query';
+    component.articleForm.setValue({ body: query });
+    queryLLMService.query.and.returnValue(of({ choices: [{ message: { content: 'Test response' } }] }));
+
     component.submitForm();
 
     expect(component.isSubmitting).toBeFalse();

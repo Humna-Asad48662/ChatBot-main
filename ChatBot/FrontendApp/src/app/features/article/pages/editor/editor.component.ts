@@ -9,6 +9,8 @@ import { QueryHistoryService } from "../../services/queryHistory.service";
 import { QueryHistory } from "../../models/queryHistory.model";
 import { identity, timeInterval } from "rxjs";
 
+
+
 @Component({
   selector: "app-editor-page",
   templateUrl: "./editor.component.html",
@@ -25,6 +27,7 @@ export default class EditorComponent implements OnInit {
     response: new FormControl(""),
   });
 
+  chatHistory: { query: string; response: string }[] = [];
   isSubmitting = false;
   errors: any = {};
 
@@ -40,7 +43,25 @@ export default class EditorComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    
+  }
+
+  deleteHistoryItem(index: number): void {
+    this.chatHistory.splice(index, 1);
+  }
+  
+  //clear the text areas
+  clear(): void {
+    this.articleForm.patchValue({ body: '', response: '' });
+  }
+   
+  //refresh page
+  refresh(): void {
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate(['/editor']);
+    });
+  }
 
   submitForm(): void {
     this.isSubmitting = true;
@@ -51,14 +72,12 @@ export default class EditorComponent implements OnInit {
         const responseText = response['choices'][0].message.content;
         this.articleForm.patchValue({ response: responseText });
         this.focusTextarea();
+
+        // Add to chat history
+        this.chatHistory.push({ query, response: responseText });
       }
       this.isSubmitting = false;
     });
-  }
-
-  deleteChat(): void {
-    this.articleForm.reset();
-    this.response = "";
   }
 
   focusTextarea(): void {
@@ -69,11 +88,7 @@ export default class EditorComponent implements OnInit {
     textarea.style.height = `${textarea.scrollHeight}px`;
   }
 
-  clearTextAreas(): void {
-    this.articleForm.reset();
-    this.response = "";
-  }
-
+  
   
 }
 

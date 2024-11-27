@@ -39,6 +39,17 @@
               </fieldset>
             </fieldset>
           </form>
+          <div class="chat-history">
+            <div *ngFor="let chat of chatHistory; let i = index" class="chat-entry">
+              <div class="chat-query">
+                <strong>Query:</strong> {{ chat.query }}
+              </div>
+              <div class="chat-response">
+                <strong>Response:</strong> {{ chat.response }}
+              </div>
+              <button class="btn btn-danger btn-sm" (click)="deleteHistoryItem(i)">Delete</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

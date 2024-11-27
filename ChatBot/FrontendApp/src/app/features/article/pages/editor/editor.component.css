@@ -3,6 +3,10 @@
   border-color: #6894d5; /* Change this to your desired color */
 }
 
+.chat-history-container {
+  position: relative;
+}
+
 .chat-history {
   max-height: 400px;
   overflow-y: auto;
@@ -17,4 +21,10 @@
 
 .chat-query, .chat-response {
   margin-bottom: 5px;
+}
+
+.delete-chat-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }

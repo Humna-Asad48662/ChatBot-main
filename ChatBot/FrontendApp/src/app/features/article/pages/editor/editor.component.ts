@@ -9,7 +9,10 @@ import { QueryHistoryService } from "../../services/queryHistory.service";
 import { QueryHistory } from "../../models/queryHistory.model";
 import { identity, timeInterval } from "rxjs";
 
-
+interface ChatEntry {
+  query: string;
+  response: string;
+}
 
 @Component({
   selector: "app-editor-page",
@@ -19,15 +22,11 @@ import { identity, timeInterval } from "rxjs";
   standalone: true,
 })
 export default class EditorComponent implements OnInit {
-  tagList: string[] = [];
-  response: string = "";
-  @ViewChild('response') bodyTextarea!: ElementRef;
+  @ViewChild('chatHistory') chatHistory!: ElementRef;
   articleForm: UntypedFormGroup = new FormGroup({
     body: new FormControl(""),
-    response: new FormControl(""),
   });
-
-  chatHistory: { query: string; response: string }[] = [];
+  chatEntries: ChatEntry[] = [];
   isSubmitting = false;
   errors: any = {};
 
@@ -36,32 +35,9 @@ export default class EditorComponent implements OnInit {
     private readonly articleService: QueryLLMService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-  ) {
-    this.articleForm = this.fb.group({
-      body: '',
-      response: ''
-    });
-  }
+  ) {}
 
-  ngOnInit(): void {
-    
-  }
-
-  deleteHistoryItem(index: number): void {
-    this.chatHistory.splice(index, 1);
-  }
-  
-  //clear the text areas
-  clear(): void {
-    this.articleForm.patchValue({ body: '', response: '' });
-  }
-   
-  //refresh page
-  refresh(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-      this.router.navigate(['/editor']);
-    });
-  }
+  ngOnInit(): void {}
 
   submitForm(): void {
     this.isSubmitting = true;
@@ -70,25 +46,26 @@ export default class EditorComponent implements OnInit {
     this.articleService.query(query).subscribe((response) => {
       if (response['choices'][0]?.message?.content != undefined) {
         const responseText = response['choices'][0].message.content;
-        this.articleForm.patchValue({ response: responseText });
-        this.focusTextarea();
-
-        // Add to chat history
-        this.chatHistory.push({ query, response: responseText });
+        this.chatEntries.push({ query, response: responseText });
+        this.articleForm.reset();
+        this.scrollToBottom();
       }
       this.isSubmitting = false;
     });
   }
-
-  focusTextarea(): void {
-    const textarea: HTMLTextAreaElement = this.bodyTextarea.nativeElement;
-    textarea.focus();
-    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-    textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
+ deleteChatHistory(): void {
+    this.chatEntries = [];
   }
 
-  
-  
+  //write the function to refresh the page
+  refreshPage(): void {
+    window.location.reload();
+  }
+
+  scrollToBottom(): void {
+    setTimeout(() => {
+      this.chatHistory.nativeElement.scrollTop = this.chatHistory.nativeElement.scrollHeight;
+    }, 0);
+  }
 }
 
